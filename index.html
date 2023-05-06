@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Определитель сленга</title>
+    <link rel="stylesheet"
+        href="https://sso-forms-prod.cdn-tinkoff.ru/client/releases/2.17.3/styles/entry/default.b4d5d4ece5bdc99023dc.css">
+    <link rel="shortcut icon" href="pfp.jpg" type="image/x-icon">
+    <style>
+        body {
+            background: url(https://business.cdn-tinkoff.ru/static/projects/sso-mono/assets/tinkoff-background.svg) no-repeat 100% 100%, #fcfcfc;
+        }
+
+        .slang {
+            border-radius: 3px;
+            border: 2px solid #ffe10f;
+            padding: 1px;
+            cursor: help;
+        }
+
+        .slang.determined {
+            border-color: #ff470f;
+        }
+
+        textarea {
+            height: auto;
+            resize: none;
+        }
+
+        .ui-field__native {
+            padding-top: 30px !important;
+        }
+
+        #result {
+            line-height: 30px;
+        }
+
+        .circle {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .circle.yellow {
+            background: #ffe10f;
+            opacity: .9;
+        }
+
+        .circle.red {
+            background: #ff470f;
+            opacity: .9;
+        }
+
+        .flex {
+            display: flex;
+            align-items: center;
+        }
+
+        #description {
+            margin-top: 10px;
+            display: inline-block;
+            display: none;
+            line-height: 20px;
+            font-size: 15px;
+            color: #555;
+            padding: 15px;
+            box-sizing: border-box;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, .05);
+        }
+
+        .ui-field {
+            width: 100%;
+        }
+
+        @media screen and (min-width: 736px) {
+
+            .wrapper,
+            .main,
+            .b-container {
+                width: 700px;
+                max-width: 700px;
+            }
+        }
+
+        @media screen and (max-width: 736px) {
+
+            .wrapper,
+            .main,
+            .b-container {
+                width: 100%;
+                max-width: none;
+            }
+        }
+
+        .slang.ml .slang.ml {
+            border: none;
+            padding: 0;
+        }
+
+        .tooltip {
+            position: fixed;
+            display: inline-block;
+            top: 0;
+            left: 0;
+            background: #f2f2f2;
+            box-shadow: 0px 4px 24px rgba(0, 0, 0, .12);
+            border: 1px solid #e2e2e2;
+            min-width: 100px;
+            min-height: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            transition: all .2s;
+            opacity: 0;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            background: transparent;
+            height: 0;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #999;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-button {
+            display: none;
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: transparent
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #777;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body class="body_in-frame">
+    <div class="wrapper">
+        <div class="header"></div>
+        <div class="main">
+            <div class="b-container b-container_in-frame">
+                <h1 class="b-title">Поиск биржевого сленга</h1>
+                <div class="container">
+                    <form class="b-form" validator="" autocomplete="off" spellcheck="false" method="post">
+                        <div class="b-form__row b-form__row_common">
+                            <div class="b-form__field b-form__field_in-frame">
+                                <label class="ui-field">
+                                    <textarea class="ui-field__native" id="textField" name="text" required=""
+                                        autofocus="" type="text" onblur="toggle_class()"></textarea>
+                                    <span class="ui-field__label">Текст</span>
+                                </label>
+                                <br>
+                                <button class="ui-button" id="button">Найти<div class="ghost"></div>
+                                </button>
+                                <p id="result"></p>
+                            </div>
+                            <div class="ui-group__note">
+                            </div>
+                        </div>
+                    </form><span class="ui-error" id="formError"></span>
+                </div>
+            </div>
+        </div>
+        <div class="footer b-footer">
+            <div class="b-paragraph b-paragraph_warning-in-frame">© Кочубей с Уолл-Стрит, 2023 · <a
+                    href="https://github.com/Tinkoff-Pulse-Research"
+                    style="text-decoration: none; color: #a2a4a6;">github</a> · <a
+                    href="integrations"
+                    style="text-decoration: none; color: #a2a4a6;">интеграции</a></div>
+        </div>
+    </div>
+    <div class="tooltip"></div>
+    <script>
+        if (typeof (String.prototype.trim) === "undefined") {
+            String.prototype.trim = function () {
+                return String(this).replace(/^\s+|\s+$/g, '');
+            };
+        }
+
+        function resizeTextarea(ev) {
+            this.style.height = '24px';
+            this.style.height = this.scrollHeight + 12 + 'px';
+        }
+
+        var te = document.querySelector('textarea');
+        te.addEventListener('input', resizeTextarea);
+        function toggle_class() {
+            console.log(document.querySelector("#textField"));
+            if (document.querySelector("#textField").value) {
+                document.querySelector("#textField").classList.add("ui-field_has-value");
+            } else {
+                document.querySelector("#textField").classList.remove("ui-field_has-value");
+            }
+        }
+        document.querySelector("#button").onclick = (e) => {
+            e.preventDefault();
+            fetch("https://tinkoff.dan.tatar/detect_slang", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    text: document.querySelector("#textField").value.trim()
+                }),
+                cache: "reload",
+            }).then(response => response.json()).then(data => {
+                res = data.result.highlight;
+                text = document.querySelector("#textField").value.trim().split(/\s/gm);
+                Object.entries(data.result.highlight).forEach(([key, value]) => {
+                    var index = key.split("_")[0];
+                    var model = key.split("_")[1];
+                    if (model == "determined2") {
+                        model = "determined";
+                        var index = key.split("_")[0];
+                        var left = parseInt(index.split(":")[0]);
+                        var right = parseInt(index.split(":")[1]);
+                        text[left] = `<span class="slang ml" aria-title="${value || "нет определения 😔"}">${text[left]}`;
+                        text[right] = `${text[right]}</span>`;
+                    } else {
+                        word = text[parseInt(index)];
+                        text[parseInt(index)] = `<span class="slang ml" aria-title="${value || "нет определения 😔"}">${word}</span>`;
+                    }
+                });
+                res = text.join(" ");
+                document.querySelector("p").innerHTML = res;
+                // document.querySelector("#description").style.display = "inline-block";
+                document.querySelectorAll(".slang").forEach((elem) => {
+                    elem.onmouseover = (e) => {
+                        var r = e.target.getBoundingClientRect();
+                        var box = document.querySelector(".tooltip");
+                        box.style.marginTop = `${r.y + 10 + r.height}px`;
+                        if (window.innerWidth > 736) {
+                            box.style.marginLeft = `${r.x + 10}px`;
+                        } else {
+                            if (r.x + 10 > window.innerWidth * 0.3) {
+                                box.style.marginLeft = `${Math.round(window.innerWidth * 0.3)}px`;
+                            } else {
+                                box.style.marginLeft = `${r.x + 10}px`;
+                            }
+                        }
+                        box.innerText = elem.getAttribute("aria-title");
+                        box.style.opacity = "1";
+                    }
+
+                    elem.onmouseout = () => {
+                        var box = document.querySelector(".tooltip");
+                        box.style.opacity = "0";
+                    }
+                });
+            });
+        }
+
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has("text")) {
+            document.querySelector("#textField").value = urlParams.get("text");
+            document.querySelector("#button").click();
+        }
+    </script>
+</body>
+
+</html>
